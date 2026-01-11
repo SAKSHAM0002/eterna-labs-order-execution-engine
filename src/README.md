@@ -113,7 +113,22 @@ A concise reference of the folders under `src/` and their primary responsibiliti
 	- `repository/`: Data access layer (Postgres) — connection and repository implementations for orders/history.
 	- `routes/`: Fastify route registration mapping endpoints to handler functions.
 	- `services/`: Business logic (OrderService, DexService, ExecutionService, WebSocketService) — single-responsibility services used by handlers and workers.
-	- `utils/`: Engine-specific helpers and constants.
-	- `test-concurrent-orders.html`: Small test UI for stress/functional testing via API/WebSocket.
 
-Use this section as a quick lookup when navigating the codebase — one line per directory to keep it focused and scannable.
+---
+
+## Order types — chosen option and how to extend (plain English)
+
+Chosen order type — Market Order
+- Why: Market orders run immediately at the best available price. Our engine already collects quotes quickly and executes swaps with low latency, so Market Orders fit the existing flow (validate → queue → worker → quote → execute) without adding waiting logic. Starting with Market Orders lets us verify the execution pipeline and improve reliability before adding more complex behaviors.
+
+How to add Limit Orders (simple)
+- Idea: A Limit Order waits until the price reaches a target, then runs the same swap flow we already have.
+- What to add: a `PriceWatcher` service that watches price feeds and checks pending limit orders in the database. When a target price is met, the watcher enqueues the normal execution job via `QueueManager`.
+- Reuse: The existing `ExecutionService` and workers perform the swap once the job is enqueued.
+
+How to add Sniper Orders (simple)
+- Idea: A Sniper Order fires instantly when a launch event happens (token/pool creation).
+- What to add: a `LaunchListener` that listens for blockchain/indexer or mempool events and enqueues an execution job immediately when launch conditions match.
+- Safety: Sniper flows need extra pre-checks (simulate swap, check liquidity), strict slippage/fee caps, and operational guardrails (rate limits, whitelists).
+
+---
