@@ -1,11 +1,12 @@
+## Overview
 
 - 1: Client submits an order via REST or WebSocket.
 - 2a: HTTP handler receives request, Fastify routes to handler which delegates to `OrderService`.
-- 2b: The handler/service may persist an initial order record in Postgres.
+- 2b: The handler/service persists an initial order record in Postgres.
 - 3: `OrderService` enqueues an execution job via `QueueManager` (BullMQ).
 - 4: QueueManager writes the job to Redis; worker(s) will pick it up.
 - 5: Worker picks up the job and calls `ExecutionService.processOrderExecutionJob()`.
-- 6: `ExecutionService` asks `DexService` for quotes (parallel), picks the best, then calls the corresponding `DexGateway` to execute the swap.
+- 6: `ExecutionService` asks `DexService` for quotes , picks the best, then calls the corresponding `DexGateway` to execute the swap.
 - 7: On success/failure the `ExecutionService` updates the database and uses `WebSocketService` to push real-time updates back to the client.
 
 ## Architecture Diagram (ASCII)
@@ -74,9 +75,7 @@ Below is a clean, systematic ASCII diagram that describes the main components an
 							| - getQuote(), executeSwap()|
 							+---------------------------+
 
-Legend:
-- Arrow labels: numbers indicate steps in the high-level mapping below.
-- Parallel calls: `DexService` fetches quotes from multiple gateways in parallel and returns `allQuotes` and comparison data.
+
 ```
 
 High-level step mapping:
@@ -116,19 +115,18 @@ A concise reference of the folders under `src/` and their primary responsibiliti
 
 ---
 
-## Order types — chosen option and how to extend (plain English)
+## Order types — chosen option and how to extend
 
 Chosen order type — Market Order
-- Why: Market orders run immediately at the best available price. Our engine already collects quotes quickly and executes swaps with low latency, so Market Orders fit the existing flow (validate → queue → worker → quote → execute) without adding waiting logic. Starting with Market Orders lets us verify the execution pipeline and improve reliability before adding more complex behaviors.
+- Why: Market orders run immediately at the best available price. Basic order-engine collects quotes quickly and executes swaps with low latency, so Market Orders fit the existing flow (validate → queue → worker → quote → execute) without adding waiting logic. Starting with Market Orders lets us verify the execution pipeline and improve reliability before adding more complex behaviors.
 
-How to add Limit Orders (simple)
+How to add Limit Orders
 - Idea: A Limit Order waits until the price reaches a target, then runs the same swap flow we already have.
 - What to add: a `PriceWatcher` service that watches price feeds and checks pending limit orders in the database. When a target price is met, the watcher enqueues the normal execution job via `QueueManager`.
 - Reuse: The existing `ExecutionService` and workers perform the swap once the job is enqueued.
 
-How to add Sniper Orders (simple)
+How to add Sniper Orders
 - Idea: A Sniper Order fires instantly when a launch event happens (token/pool creation).
 - What to add: a `LaunchListener` that listens for blockchain/indexer or mempool events and enqueues an execution job immediately when launch conditions match.
-- Safety: Sniper flows need extra pre-checks (simulate swap, check liquidity), strict slippage/fee caps, and operational guardrails (rate limits, whitelists).
 
 ---
