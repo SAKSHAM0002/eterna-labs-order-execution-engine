@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Execution Engine - Testing Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+            background: #111111;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 30px 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #111111;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        .header p {
+            color: #6b7280;
+            font-size: 1.1em;
+        }
+
+        .controls-section {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls-header {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #111111;
+            color: #fff;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.1);
+            transition: left 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #6b7280;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        button.clear-btn {
+            background: #dc2626;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+        }
+
+        button.clear-btn:hover {
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.6);
+        }
+
+        .stats {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-header {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: #e5e7eb;
+            padding: 20px;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #6b7280;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: 800;
+            color: #111111;
+        }
+
+        .stat-card.completed .stat-value {
+            color: #059669;
+        }
+
+        .stat-card.failed .stat-value {
+            color: #dc2626;
+        }
+
+        .stat-card.active .stat-value {
+            color: #d97706;
+        }
+
+        .order-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+            gap: 20px;
+        }
+
+        .order-box {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .order-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .order-header {
+            font-weight: 700;
+            font-size: 1.4em;
+            color: #1f2937;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .order-id {
+            color: #111111;
+        }
+
+        .order-log {
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 1.05em;
+        }
+
+        .order-log::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .order-log::-webkit-scrollbar-track {
+            background: #f3f4f6;
+            border-radius: 10px;
+        }
+
+        .order-log::-webkit-scrollbar-thumb {
+            background: #111111;
+            border-radius: 10px;
+        }
+
+        .status-line {
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            transition: all 0.2s ease;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .status-line:hover {
+            background: #f9fafb;
+        }
+
+        .status-icon {
+            font-size: 1.2em;
+            flex-shrink: 0;
+        }
+
+        .status-content {
+            flex: 1;
+        }
+
+        .status-message {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .status-pending .status-message { color: #f59e0b; }
+        .status-routing .status-message { color: #3b82f6; }
+        .status-building .status-message { color: #111111; }
+        .status-submitted .status-message { color: #111111; }
+        .status-completed .status-message { color: #10b981; }
+        .status-confirmed .status-message { color: #10b981; }
+        .status-failed .status-message { color: #ef4444; }
+
+        .timestamp {
+            color: #9ca3af;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .order-data {
+            background: #f9fafb;
+            padding: 10px;
+            margin-top: 8px;
+            border-radius: 6px;
+            border-left: 3px solid #111111;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.85em;
+            color: #4b5563;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #f3f4f6;
+            border-top: 2px solid #111111;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .success-badge {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .failed-badge {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .order-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1> Order Execution Engine</h1>
+            <p>Testing Dashboard - Submit and Monitor Concurrent Orders</p>
+        </div>
+
+        <div class="controls-section">
+            <div class="controls-header">
+                 Quick Actions
+            </div>
+            <div class="controls">
+                <button id="btn-5" onclick="submitOrders(5)"> Submit 5 Orders</button>
+                <button id="btn-10" onclick="submitOrders(10)"> Submit 10 Orders</button>
+                <button id="btn-20" onclick="submitOrders(20)"> Submit 20 Orders</button>
+                <button id="btn-50" onclick="submitOrders(50)"> Submit 50 Orders</button>
+                <button id="btn-100" onclick="submitOrders(100)"> Submit 100 Orders</button>
+                <button class="clear-btn" id="btn-clear" onclick="clearResults()"> Clear Results</button>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stats-header">
+                 Statistics
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Submitted</div>
+                    <div class="stat-value" id="stat-submitted">0</div>
+                </div>
+                <div class="stat-card completed">
+                    <div class="stat-label"> Completed</div>
+                    <div class="stat-value" id="stat-completed">0</div>
+                </div>
+                <div class="stat-card failed">
+                    <div class="stat-label"> Failed</div>
+                    <div class="stat-value" id="stat-failed">0</div>
+                </div>
+                <div class="stat-card active">
+                    <div class="stat-label"> Active</div>
+                    <div class="stat-value pulse" id="stat-active">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"> Avg Time</div>
+                    <div class="stat-value" id="stat-avg-time">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label"> Success Rate</div>
+                    <div class="stat-value" id="stat-success-rate">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="order-container" id="order-container"></div>
+    </div>
+
+    <script>
+        let orderStats = {
+            submitted: 0,
+            completed: 0,
+            failed: 0,
+            active: 0,
+            executionTimes: []
+        };
+
+        function updateStats() {
+            document.getElementById('stat-submitted').textContent = orderStats.submitted;
+            document.getElementById('stat-completed').textContent = orderStats.completed;
+            document.getElementById('stat-failed').textContent = orderStats.failed;
+            document.getElementById('stat-active').textContent = orderStats.active;
+            
+            // Calculate average execution time
+            if (orderStats.executionTimes.length > 0) {
+                const avg = orderStats.executionTimes.reduce((a, b) => a + b, 0) / orderStats.executionTimes.length;
+                document.getElementById('stat-avg-time').textContent = `${(avg / 1000).toFixed(2)}s`;
+            }
+            
+            // Calculate success rate
+            const total = orderStats.completed + orderStats.failed;
+            if (total > 0) {
+                const rate = (orderStats.completed / total * 100).toFixed(1);
+                document.getElementById('stat-success-rate').textContent = `${rate}%`;
+            }
+        }
+
+        function createOrderBox(orderNum) {
+            const box = document.createElement('div');
+            box.className = 'order-box';
+            box.id = `order-${orderNum}`;
+            
+            const header = document.createElement('div');
+            header.className = 'order-header';
+            header.innerHTML = `
+                <span class="order-id">Order #${orderNum}</span>
+                <span class="loading-spinner"></span>
+            `;
+            box.appendChild(header);
+            
+            const logArea = document.createElement('div');
+            logArea.className = 'order-log';
+            logArea.id = `log-${orderNum}`;
+            box.appendChild(logArea);
+            
+            return box;
+        }
+
+        function logToOrder(orderNum, message, statusClass = '', data = null) {
+            const logArea = document.getElementById(`log-${orderNum}`);
+            if (!logArea) return;
+            
+            const line = document.createElement('div');
+            line.className = `status-line ${statusClass}`;
+            
+            const time = new Date().toLocaleTimeString('en-US', { 
+                hour12: false, 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            
+            // Determine icon based on status
+            let icon = '';
+            if (statusClass.includes('pending')) icon = '⏱';
+            if (statusClass.includes('routing')) icon = '⇄';
+            if (statusClass.includes('building')) icon = '⚙';
+            if (statusClass.includes('submitted')) icon = '↑';
+            if (statusClass.includes('completed') || statusClass.includes('confirmed')) icon = '✔';
+            if (statusClass.includes('failed')) icon = '✖';
+            
+            line.innerHTML = `
+                <span class="status-icon">${icon}</span>
+                <div class="status-content">
+                    <div class="status-message">${message}</div>
+                    <div class="timestamp">${time}</div>
+                </div>
+            `;
+            
+            if (data) {
+                const dataDiv = document.createElement('div');
+                dataDiv.className = 'order-data';
+                dataDiv.textContent = JSON.stringify(data, null, 2);
+                line.querySelector('.status-content').appendChild(dataDiv);
+            }
+            
+            logArea.appendChild(line);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        function updateOrderHeader(orderNum, status) {
+            const header = document.querySelector(`#order-${orderNum} .order-header`);
+            if (!header) return;
+            
+            const spinner = header.querySelector('.loading-spinner');
+            if (spinner) {
+                if (status === 'completed' || status === 'confirmed') {
+                    spinner.outerHTML = '<span class="success-badge"> COMPLETED</span>';
+                } else if (status === 'failed') {
+                    spinner.outerHTML = '<span class="failed-badge"> FAILED</span>';
+                }
+            }
+        }
+
+        function submitOrders(count) {
+            // Disable buttons during execution
+            document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+            
+            // Clear previous results
+            clearResults();
+            
+            console.log(`\n🚀 Submitting ${count} orders simultaneously...\n`);
+            
+            const container = document.getElementById('order-container');
+            const tokenPairs = [
+                { tokenIn: 'SOL', tokenOut: 'USDC', amount: 1.0 },
+                { tokenIn: 'SOL', tokenOut: 'USDT', amount: 0.5 },
+                { tokenIn: 'USDC', tokenOut: 'SOL', amount: 100 },
+                { tokenIn: 'RAY', tokenOut: 'USDC', amount: 10 },
+                { tokenIn: 'SOL', tokenOut: 'RAY', amount: 2.0 },
+                { tokenIn: 'USDT', tokenOut: 'SOL', amount: 50 },
+                { tokenIn: 'SOL', tokenOut: 'BONK', amount: 3.0 },
+                { tokenIn: 'mSOL', tokenOut: 'SOL', amount: 1.5 },
+            ];
+            
+            for (let i = 1; i <= count; i++) {
+                const box = createOrderBox(i);
+                container.appendChild(box);
+                
+                // Random token pair
+                const pair = tokenPairs[Math.floor(Math.random() * tokenPairs.length)];
+                const orderData = {
+                    tokenIn: pair.tokenIn,
+                    tokenOut: pair.tokenOut,
+                    amount: pair.amount + (Math.random() * 0.5), // Add some randomness
+                    slippageTolerance: 0.5 + (Math.random() * 1.5), // 0.5-2%
+                    maxRetries: 3
+                };
+                
+                // Stagger order submission slightly to avoid overwhelming
+                setTimeout(() => executeOrder(i, orderData), i * 50);
+            }
+            
+            // Re-enable buttons after all orders complete (estimated time)
+            setTimeout(() => {
+                document.querySelectorAll('button').forEach(btn => btn.disabled = false);
+            }, (count * 8000) + 5000);
+        }
+
+        function executeOrder(orderNum, orderData) {
+            const ws = new WebSocket('ws://localhost:3000/api/orders/execute');
+            const startTime = Date.now();
+            
+            orderStats.submitted++;
+            orderStats.active++;
+            updateStats();
+            
+            logToOrder(orderNum, 'Connecting to server', 'status-pending');
+            
+            ws.onopen = () => {
+                logToOrder(orderNum, 'Connected - Sending order request', 'status-pending', orderData);
+                
+                ws.send(JSON.stringify({
+                    action: 'execute',
+                    order: orderData
+                }));
+            };
+            
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.type === 'connected') {
+                        logToOrder(orderNum, data.message, 'status-pending');
+                    } else if (data.type === 'status') {
+                        const statusClass = `status-${data.status}`;
+                        let message = data.status.toUpperCase();
+                        
+                        if (data.data && data.data.message) {
+                            message = data.data.message;
+                        }
+                        
+                        logToOrder(orderNum, message, statusClass, data.data);
+                        
+                        // Update header badge
+                        updateOrderHeader(orderNum, data.status);
+                        
+                        // Handle completion
+                        if (data.status === 'completed' || data.status === 'confirmed') {
+                            const executionTime = Date.now() - startTime;
+                            orderStats.executionTimes.push(executionTime);
+                            orderStats.completed++;
+                            orderStats.active--;
+                            updateStats();
+                            
+                            logToOrder(
+                                orderNum, 
+                                `Order completed successfully in ${(executionTime / 1000).toFixed(2)}s`, 
+                                'status-completed'
+                            );
+                            
+                            setTimeout(() => ws.close(), 1000);
+                        } else if (data.status === 'failed') {
+                            orderStats.failed++;
+                            orderStats.active--;
+                            updateStats();
+                            
+                            setTimeout(() => ws.close(), 1000);
+                        }
+                    } else if (data.type === 'error') {
+                        logToOrder(orderNum, `ERROR: ${data.message}`, 'status-failed', data.data);
+                        updateOrderHeader(orderNum, 'failed');
+                        orderStats.failed++;
+                        orderStats.active--;
+                        updateStats();
+                        ws.close();
+                    }
+                } catch (error) {
+                    console.error('Parse error:', error);
+                    logToOrder(orderNum, `Parse error: ${error.message}`, 'status-failed');
+                }
+            };
+            
+            ws.onerror = (error) => {
+                logToOrder(orderNum, 'WebSocket connection error', 'status-failed');
+                console.error(`Order ${orderNum} error:`, error);
+                updateOrderHeader(orderNum, 'failed');
+                orderStats.failed++;
+                orderStats.active--;
+                updateStats();
+            };
+            
+            ws.onclose = () => {
+                logToOrder(orderNum, 'Connection closed', 'status-pending');
+            };
+        }
+
+        function clearResults() {
+            document.getElementById('order-container').innerHTML = '';
+            orderStats = {
+                submitted: 0,
+                completed: 0,
+                failed: 0,
+                active: 0,
+                executionTimes: []
+            };
+            updateStats();
+        }
+
+        // Show initial message
+        console.log('%c Order Execution Engine Testing Dashboard', 'color: #667eea; font-size: 24px; font-weight: bold;');
+        console.log('%cSubmit orders using the buttons above!', 'color: #6b7280; font-size: 14px;');
+    </script>
+</body>
+</html>
