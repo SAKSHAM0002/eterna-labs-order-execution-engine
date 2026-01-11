@@ -1,0 +1,40 @@
+{
+  "name": "order-execution-engine",
+  "version": "1.0.0",
+  "description": "Order Execution Engine - Refactored Architecture",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/order-execution-engine/index.ts",
+    "build": "tsc",
+    "start": "node dist/order-execution-engine/index.js",
+    "worker": "tsx src/order-execution-engine/worker.ts",
+    "test": "jest"
+  },
+  "keywords": [
+    "order-execution",
+    "dex",
+    "solana",
+    "blockchain"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@fastify/cors": "^8.4.0",
+    "@fastify/websocket": "^8.3.0",
+    "bullmq": "^5.11.0",
+    "dotenv": "^17.2.3",
+    "fastify": "^4.25.0",
+    "pg": "^8.11.3",
+    "redis": "^4.6.0",
+    "uuid": "^9.0.1",
+    "winston": "^3.19.0",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.28",
+    "@types/pg": "^8.10.9",
+    "@types/uuid": "^9.0.7",
+    "tsx": "^4.7.0",
+    "typescript": "^5.9.3"
+  }
+}
